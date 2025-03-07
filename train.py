@@ -5,9 +5,10 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from sklearn.model_selection import train_test_split
-from dataset import MammoDataset,compute_mean_std
+from dataset_2 import MammoDataset,compute_mean_std
 from models import MammoNet,Pretrained_ResNet
 from config import *
+import os
 
 def train_model(model,train_loader,val_loader,model_name):
     device=torch.device('mps' if torch.mps.is_available() else 'cpu')
@@ -51,6 +52,26 @@ def main():
     calc_df=pd.read_csv(f'{CSV_dir}/calc_case_description_train_set.csv')
     mass_df=pd.read_csv(f'{CSV_dir}/mass_case_description_train_set.csv')
     combined_df=pd.concat([calc_df,mass_df])
+    # Filter valid paths
+    valid_paths = []
+    for path in combined_df['image file path']:
+        full_path = os.path.join(Image_dir, path)
+        if not os.path.exists(full_path):
+            base,ext=os.path.splitext(full_path)
+            alternatives = ['.jpg', '.jpeg', '']
+            found = False
+            for alt_ext in alternatives:
+                alt_path = base + alt_ext
+                if os.path.exists(alt_path):
+                    valid_paths.append(path)
+                    found = True
+                    break
+            if not found:
+                print(f"File not found for {full_path} (tried alternatives)")
+        else:
+            valid_paths.append(path)
+    combined_df = combined_df[combined_df['image file path'].isin(valid_paths)]
+    
     train_df,val_df=train_test_split(combined_df,test_size=0.2,stratify=combined_df['pathology'])
 
     temporary_dataset=MammoDataset(train_df,transform=None,image_dir=Image_dir)

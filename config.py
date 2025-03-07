@@ -8,5 +8,5 @@ Learning_rate=0.001
 
 Train_transform=None
 val_transform=None
-'''Train_transform_Resnet=None
-Val_transform_Resnet=None'''
+
+

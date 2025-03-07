@@ -21,11 +21,6 @@ class MammoDataset(Dataset):
         image_name=self.df.iloc[index]['image file path']
         image_path=os.path.join(self.image_dir,image_name)
         image=Image.open(image_path).convert('RGB')
-        try:
-            image = Image.open(image_path).convert('RGB')
-        except FileNotFoundError:
-            print(f"Missing image: {image_path}")
-            return torch.zeros(3, 224, 224), 0  # Return dummy data
         label=self.label_map[self.df.iloc[index][self.target]]
 
         if self.transform is not None:
