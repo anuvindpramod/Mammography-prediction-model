@@ -12,7 +12,7 @@ class MammoDataset(Dataset):
         self.transform = transform
         self.target = target
         self.image_dir = image_dir
-        self.label_map={'benign':0,'malignant':1}
+        self.label_map={'BENIGN':0,'MALIGNANT':1,'BENIGN_WITHOUT_CALLBACK':0}
 
     def __len__(self):
         return len(self.df)
