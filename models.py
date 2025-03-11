@@ -2,24 +2,38 @@ import torch.nn as nn
 import torchvision.models as models
 
 class MammoNet(nn.Module):
-    def __init__(self):
+    def __init__(self,dropout_rate=0.5):
         super().__init__()
         self.features=nn.Sequential(
             nn.Conv2d(3,32,3,padding=1,stride=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2),
+
             nn.Conv2d(32,64,3,padding=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2),
+
             nn.Conv2d(64,128,3,padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(128,256,3,padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(),
             nn.MaxPool2d(2)
         )
         self.classifier=nn.Sequential(
-            nn.Linear(128*28*28,512),
+            nn.Dropout(dropout_rate),
+            nn.Linear(256*14*14,512),
             nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(512,2)
+            nn.Dropout(dropout_rate),
+            nn.Linear(512,256),
+            nn.ReLU(),
+            nn.Linear(256,2)
+
         )
 
     def forward(self,x):
@@ -30,9 +44,12 @@ class MammoNet(nn.Module):
 class Pretrained_ResNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.resnet=models.resnet18(pretrained=True,progress=True)
-        self.resnet.conv1=nn.Conv2d(3,64,kernel_size=7,stride=2,padding=3,bias=False)
-        self.resnet.fc=nn.Linear(self.resnet.fc.in_features,2)
+        self.resnet=models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+        self.resnet.fc=nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(self.resnet.fc.in_features,2)
+        )
+        
         
     def forward(self,x):
         return self.resnet(x)
